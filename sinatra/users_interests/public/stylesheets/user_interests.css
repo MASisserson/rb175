@@ -1,0 +1,5 @@
+offending_element::after {
+  clear: both;
+  content: "";
+  display: block;
+}
