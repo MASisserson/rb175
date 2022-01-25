@@ -1,7 +1,6 @@
 require "tilt/erubis"
 require "sinatra"
 require "sinatra/reloader"
-require "pry"
 
 helpers do
   def wrap_paragraphs(array_of_paragraphs)
