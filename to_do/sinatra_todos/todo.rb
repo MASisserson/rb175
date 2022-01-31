@@ -3,6 +3,9 @@
 require 'sinatra'
 require 'sinatra/reloader'
 require 'tilt/erubis'
+require 'sinatra/content_for'
+
+require 'pry'
 
 configure do
   enable :sessions
@@ -11,6 +14,7 @@ end
 
 before do
   session[:lists] ||= []
+  @lists = session[:lists]
 end
 
 get '/' do
@@ -19,7 +23,6 @@ end
 
 # View list of lists
 get '/lists' do
-  @lists = session[:lists]
   erb :lists, layout: :layout
 end
 
@@ -49,4 +52,19 @@ post '/lists' do
     session[:success] = 'The list has been created.'
     redirect '/lists'
   end
+end
+
+get '/lists/:id' do
+  @id = params[:id].to_i
+  erb :id, layout: :layout
+end
+
+post '/lists/:id' do
+  # list_item = params[:list_item]
+
+  # if (error = error_for_list_item(list_item))
+  #   session[:error] = error
+  #   erb :id, layout: :layout
+  # else
+  #   @lists = { name }
 end

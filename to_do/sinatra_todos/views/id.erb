@@ -1,0 +1,27 @@
+<% content_for :header_links do %>
+  <a href="/lists" >All Lists</a>
+<% end %>
+
+<ul id="lists">
+  <li>
+    <a href="/lists/<%= @id %>">
+      <h2><%= @lists[@id][:name] %></h2>
+      <p>Edit List</p>
+    </a>
+  </li>
+</ul>
+
+<form action="/lists/<%= @id %>" method="post">
+  <dl>
+    <dt>
+      <label for="list_item">Enter a new list item:</label>
+    </dt>
+    <dd>
+      <input type="text" id="list_item" name="list_item"
+      placeholder="List item" value="" />
+    </dd>
+  </dl>
+  <fieldset>
+    <input type="submit" value="Add" />
+  </fieldset>
+</form>
