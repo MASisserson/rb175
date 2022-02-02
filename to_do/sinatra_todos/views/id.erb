@@ -1,27 +1,35 @@
 <% content_for :header_links do %>
-  <a href="/lists" >All Lists</a>
+  <a href="/lists" class="list">All Lists</a>
 <% end %>
 
-<ul id="lists">
-  <li>
-    <a href="/lists/<%= @id %>">
-      <h2><%= @lists[@id][:name] %></h2>
-      <p>Edit List</p>
-    </a>
-  </li>
-</ul>
+<section id="todos">
+  <header>
+    <h2><%= @list[:name] %></h2>
+    <ul>
+      <a class="edit" href="/lists/<%= @id %>/edit">Edit List</a>
+    </ul>
+  </header>
 
-<form action="/lists/<%= @id %>" method="post">
+  <ul>
+    <% @list[:todos].each_with_index do |todo, index| %>
+      <li>
+        <h3><%= todo[:name] %></h3>
+      </li>
+    <% end %>
+  </ul>
+</section>
+
+<form action="/lists/<%= @id %>/todos" method="post">
   <dl>
     <dt>
-      <label for="list_item">Enter a new list item:</label>
+      <label for="todo">Enter a new todo item:</label>
     </dt>
     <dd>
-      <input type="text" id="list_item" name="list_item"
-      placeholder="List item" value="" />
+      <input id="todo" name="todo" type="text" autofocus="autofocus"
+             placeholder="Something to do" value="" />
     </dd>
   </dl>
-  <fieldset>
+  <fieldset class="actions">
     <input type="submit" value="Add" />
   </fieldset>
 </form>

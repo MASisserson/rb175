@@ -17,6 +17,10 @@ before do
   @lists = session[:lists]
 end
 
+not_found do
+  redirect '/lists'
+end
+
 get '/' do
   redirect '/lists'
 end
@@ -54,17 +58,57 @@ post '/lists' do
   end
 end
 
+# Display list items
 get '/lists/:id' do
   @id = params[:id].to_i
+  @list = session[:lists][@id]
   erb :id, layout: :layout
 end
 
-post '/lists/:id' do
-  # list_item = params[:list_item]
+# Render list editing form
+get '/lists/:id/edit' do
+  @id = params[:id].to_i
+  @list = session[:lists][@id]
+  erb :edit_list, layout: :layout
+end
 
-  # if (error = error_for_list_item(list_item))
-  #   session[:error] = error
-  #   erb :id, layout: :layout
-  # else
-  #   @lists = { name }
+# Edit list
+post '/lists/:id' do
+  list_name = params[:list_name].strip
+  @id = params[:id].to_i
+  @list = session[:lists][@id]
+
+  if (error = error_for_list_name(list_name))
+    session[:error] = error
+    erb :edit_list, layout: :layout
+  else
+    @list[:name] = list_name
+    session[:success] = 'The list has been updated.'
+    redirect "/lists/#{@id}"
+  end
+end
+
+# Delete a todo list
+post '/lists/:id/delete' do |id|
+  name = @lists[id.to_i][:name]
+  @lists.delete_at id.to_i
+  session[:success] = "The list \"#{name}\" has been deleted."
+  redirect '/lists'
+end
+
+# Add a new todo to a list
+post '/lists/:list_id/todos' do |list_id|
+  todo = params[:todo].strip
+  @list = @lists[list_id.to_i]
+
+  error = error_for_todo
+  if error
+    session[:error] = error
+    @id = list_id.to_i
+    erb :id, layout: :layout
+  else
+    @list[:todos] << { name: todo, completed: false }
+    session[:success] = params[:todo] + ' was added to the list!'
+    redirect "/lists/#{list_id}"
+  end
 end
