@@ -39,7 +39,7 @@ end
 def error_for_list_name(name)
   if !(1..100).cover? name.size
     'List name must be between 1 and 100 characters.'
-  elsif session[:lists].any? { |list| list[:name] == name }
+  elsif @lists.any? { |list| list[:name] == name }
     'List name must be unique.'
   end
 end
@@ -48,7 +48,8 @@ end
 post '/lists' do
   list_name = params[:list_name].strip
 
-  if (error = error_for_list_name(list_name))
+  error = error_for_list_name(list_name)
+  if error
     session[:error] = error
     erb :new_list, layout: :layout
   else
@@ -59,30 +60,31 @@ post '/lists' do
 end
 
 # Display list items
-get '/lists/:id' do
-  @id = params[:id].to_i
-  @list = session[:lists][@id]
+get '/lists/:id' do |id|
+  @id = id.to_i
+  @list = @lists[@id]
   erb :id, layout: :layout
 end
 
 # Render list editing form
-get '/lists/:id/edit' do
-  @id = params[:id].to_i
-  @list = session[:lists][@id]
+get '/lists/:id/edit' do |id|
+  @id = id.to_i
+  @list = @lists[@id]
   erb :edit_list, layout: :layout
 end
 
 # Edit list
-post '/lists/:id' do
-  list_name = params[:list_name].strip
-  @id = params[:id].to_i
-  @list = session[:lists][@id]
+post '/lists/:id' do |id|
+  @list_name = params[:list_name].strip
+  @id = id.to_i
+  @list = @lists[@id]
 
-  if (error = error_for_list_name(list_name))
+  error = error_for_list_name(@list_name)
+  if error
     session[:error] = error
     erb :edit_list, layout: :layout
   else
-    @list[:name] = list_name
+    @list[:name] = @list_name
     session[:success] = 'The list has been updated.'
     redirect "/lists/#{@id}"
   end
@@ -96,12 +98,19 @@ post '/lists/:id/delete' do |id|
   redirect '/lists'
 end
 
+# Return an error message if the name is invalid. Return nil if name is valid.
+def error_for_todo(name)
+  if !(1..100).cover? name.size
+    'Todo must be between 1 and 100 characters.'
+  end
+end
+
 # Add a new todo to a list
 post '/lists/:list_id/todos' do |list_id|
   todo = params[:todo].strip
   @list = @lists[list_id.to_i]
 
-  error = error_for_todo
+  error = error_for_todo(todo)
   if error
     session[:error] = error
     @id = list_id.to_i
@@ -111,4 +120,19 @@ post '/lists/:list_id/todos' do |list_id|
     session[:success] = params[:todo] + ' was added to the list!'
     redirect "/lists/#{list_id}"
   end
+end
+
+# Delete a todo from a list
+post '/lists/:list_id/todos/:todo_id/delete' do |list_id, todo_id|
+  @lists[list_id.to_i][:todos].delete_at todo_id.to_i
+  session[:success] = "The todo has been deleted!"
+
+  redirect "/lists/#{params[:list_id]}"
+end
+
+post '/lists/:list_id/todos/:todo_id/complete' do |list_id, todo_id|
+  status = !@lists[list_id.to_i][:todos][todo_id.to_i][:complete]
+  @lists[list_id.to_i][:todos][todo_id.to_i][:complete] = status
+
+  redirect "/lists/#{params[:list_id]}"
 end

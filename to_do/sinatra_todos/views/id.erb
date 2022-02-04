@@ -12,8 +12,20 @@
 
   <ul>
     <% @list[:todos].each_with_index do |todo, index| %>
-      <li>
+      <li class=<%= "complete" if todo[:complete] %>>
+        <form action="/lists/<%= @id %>/todos/<%= index %>/complete"
+              method="post" class="check">
+          <input type="hidden" name="completed"
+                 value="toggle" />
+          <button type="submit">Complete</button>
+        </form>
+
         <h3><%= todo[:name] %></h3>
+
+        <form action="/lists/<%= @id %>/todos/<%= index %>/delete" 
+              method="post" class="delete">
+          <button type="submit">Delete</button>
+        </form>
       </li>
     <% end %>
   </ul>
@@ -26,7 +38,8 @@
     </dt>
     <dd>
       <input id="todo" name="todo" type="text" autofocus="autofocus"
-             placeholder="Something to do" value="" />
+             placeholder="Something to do" 
+             value="<%= params[:todo] %>" />
     </dd>
   </dl>
   <fieldset class="actions">
