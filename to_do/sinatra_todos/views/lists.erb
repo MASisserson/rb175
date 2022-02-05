@@ -1,9 +1,9 @@
 <ul id="lists">
-  <% @lists.each_with_index do |list, idx| %>
-    <li>
-      <a href="/lists/<%= idx %>">
+  <% @lists.each_with_index do |list, list_id| %>
+    <li class=<%= list_status(list_id) %>>
+      <a href="/lists/<%= list_id %>">
         <h2><%= list[:name] %></h2>
-        <p><%= list[:todos].size %></p>
+        <p><%=todos_finished(list)%>/<%= list[:todos].size %></p>
       </a>
     </li>
   <% end %>

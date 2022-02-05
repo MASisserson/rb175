@@ -7,6 +7,33 @@ require 'sinatra/content_for'
 
 require 'pry'
 
+helpers do
+  def todos_finished(list)
+    tally = 0
+    list[:todos].each do |todo|
+      tally += 1 if todo[:complete]
+    end
+
+    tally
+  end
+
+  def list_complete?(list_id)
+    list = @lists[list_id]
+    finished = todos_finished(list)
+    return false if finished.zero?
+
+    (list[:todos].size % finished).zero?
+  end
+
+  def todo_status(todo)
+    'complete' if todo[:complete]
+  end
+
+  def list_status(list_id)
+    'complete' if list_complete?(list_id)
+  end
+end
+
 configure do
   enable :sessions
   set :sessions_secret, 'secret'
@@ -100,9 +127,9 @@ end
 
 # Return an error message if the name is invalid. Return nil if name is valid.
 def error_for_todo(name)
-  if !(1..100).cover? name.size
-    'Todo must be between 1 and 100 characters.'
-  end
+  return if (1..100).cover? name.size
+
+  'Todo must be between 1 and 100 characters.'
 end
 
 # Add a new todo to a list
@@ -116,8 +143,8 @@ post '/lists/:list_id/todos' do |list_id|
     @id = list_id.to_i
     erb :id, layout: :layout
   else
-    @list[:todos] << { name: todo, completed: false }
-    session[:success] = params[:todo] + ' was added to the list!'
+    @list[:todos] << { name: todo, complete: false }
+    session[:success] = "#{todo} was added to the list!"
     redirect "/lists/#{list_id}"
   end
 end
@@ -125,14 +152,27 @@ end
 # Delete a todo from a list
 post '/lists/:list_id/todos/:todo_id/delete' do |list_id, todo_id|
   @lists[list_id.to_i][:todos].delete_at todo_id.to_i
-  session[:success] = "The todo has been deleted!"
+  session[:success] = 'The todo has been deleted!'
 
   redirect "/lists/#{params[:list_id]}"
 end
 
+# Update the completion status of a todo
 post '/lists/:list_id/todos/:todo_id/complete' do |list_id, todo_id|
-  status = !@lists[list_id.to_i][:todos][todo_id.to_i][:complete]
-  @lists[list_id.to_i][:todos][todo_id.to_i][:complete] = status
+  state = params[:complete] == 'true'
+  @todo = @lists[list_id.to_i][:todos][todo_id.to_i]
 
-  redirect "/lists/#{params[:list_id]}"
+  @todo[:complete] = state
+  session[:success] = 'Todo has been updated.'
+
+  redirect "/lists/#{list_id}"
+end
+
+# Completes all todos in a list
+post '/lists/:list_id/complete-all' do |list_id|
+  list = @lists[list_id.to_i]
+  list[:todos].each { |todo| todo[:complete] = true }
+  session[:success] = 'All todos have been accomplished!'
+
+  redirect "/lists/#{list_id}"
 end

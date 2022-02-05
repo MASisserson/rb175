@@ -2,21 +2,28 @@
   <a href="/lists" class="list">All Lists</a>
 <% end %>
 
-<section id="todos">
+<section id="todos" class=<%= list_status(@id) %>>
   <header>
     <h2><%= @list[:name] %></h2>
     <ul>
-      <a class="edit" href="/lists/<%= @id %>/edit">Edit List</a>
+      <li>
+        <form action="/lists/<%= @id %>/complete-all" method="post">
+          <button class="check" type="submit">Complete All</button>
+        </form>
+      </li>
+      <li>
+        <a class="edit" href="/lists/<%= @id %>/edit">Edit List</a>
+      </li>
     </ul>
   </header>
 
   <ul>
     <% @list[:todos].each_with_index do |todo, index| %>
-      <li class=<%= "complete" if todo[:complete] %>>
+      <li class=<%= todo_status(todo) %>>
         <form action="/lists/<%= @id %>/todos/<%= index %>/complete"
               method="post" class="check">
-          <input type="hidden" name="completed"
-                 value="toggle" />
+          <input type="hidden" name="complete"
+                 value="<%= !todo[:complete] %>" />
           <button type="submit">Complete</button>
         </form>
 
