@@ -1,17 +1,16 @@
-list = {
-  name: 'hoopla',
-  todos: [
-    { name: 'homework', complete: false },
-    { name: 'groceries', complete: true }
-  ]
-}
-
-var = list[:todos].inject(0) do |sum, todo|
-  if todo[:complete]
-    sum += 1
-  else
-    sum
-  end
+def list_complete?(list)
+  finished = todos_finished(list)
+  !finished.zero? && (list[:todos].size == finished)
 end
 
-p var
+def sort_lists(lists)
+  # return a hash with lists as keys, and indices as values.
+  display_order = Hash.new
+
+  lists.each_with_index do |list, index|
+    display_order[list] = index
+  end
+
+  new = display_order.sort_by { |list, idx| list_complete?(list) ? 1 : 0 }
+  yield(new) if block_given?
+end

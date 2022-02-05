@@ -2,7 +2,7 @@
   <a href="/lists" class="list">All Lists</a>
 <% end %>
 
-<section id="todos" class=<%= list_status(@id) %>>
+<section id="todos" class=<%= list_status(@list) %>>
   <header>
     <h2><%= @list[:name] %></h2>
     <ul>
@@ -18,9 +18,9 @@
   </header>
 
   <ul>
-    <% @list[:todos].each_with_index do |todo, index| %>
+    <% order_todos(@todos).each do |todo| %>
       <li class=<%= todo_status(todo) %>>
-        <form action="/lists/<%= @id %>/todos/<%= index %>/complete"
+        <form action="/lists/<%= @id %>/todos/<%= @todos.index(todo) %>/complete"
               method="post" class="check">
           <input type="hidden" name="complete"
                  value="<%= !todo[:complete] %>" />
@@ -29,7 +29,7 @@
 
         <h3><%= todo[:name] %></h3>
 
-        <form action="/lists/<%= @id %>/todos/<%= index %>/delete" 
+        <form action="/lists/<%= @id %>/todos/<%= @todos.index(todo) %>/delete" 
               method="post" class="delete">
           <button type="submit">Delete</button>
         </form>

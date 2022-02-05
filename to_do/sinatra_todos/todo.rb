@@ -9,28 +9,31 @@ require 'pry'
 
 helpers do
   def todos_finished(list)
-    tally = 0
-    list[:todos].each do |todo|
-      tally += 1 if todo[:complete]
+    list[:todos].inject(0) do |sum, todo|
+      sum += 1 if todo[:complete]
+      sum
     end
-
-    tally
   end
 
-  def list_complete?(list_id)
-    list = @lists[list_id]
+  def list_complete?(list)
     finished = todos_finished(list)
-    return false if finished.zero?
-
-    (list[:todos].size % finished).zero?
+    !finished.zero? && (list[:todos].size == finished)
   end
 
   def todo_status(todo)
     'complete' if todo[:complete]
   end
 
-  def list_status(list_id)
-    'complete' if list_complete?(list_id)
+  def list_status(list)
+    'complete' if list_complete?(list)
+  end
+
+  def order_lists(lists)
+    lists.sort_by { |list| list_complete?(list) ? 1 : 0 }
+  end
+
+  def order_todos(todos)
+    todos.sort_by { |todo| todo[:complete] ? 1 : 0 }
   end
 end
 
@@ -90,6 +93,7 @@ end
 get '/lists/:id' do |id|
   @id = id.to_i
   @list = @lists[@id]
+  @todos = @list[:todos]
   erb :id, layout: :layout
 end
 
