@@ -1,4 +1,4 @@
-require 'securerandom'
-
-don = SecureRandom.alphanumeric
-p don
+File.open('test2.rb', 'w') do |f2|
+  f2.puts 'Changed the file'
+  f2.close
+end

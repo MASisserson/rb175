@@ -1,0 +1,10 @@
+<form action="/users/signin" method="post" id="login">
+  <label for="username" id="username-label">
+    Username: <input type="text" id="username" name="username"
+              required value="<%= @username || '' %>">
+  </label>
+  <label for="password" id="password-label">
+    Password: <input type="password" id="password" name="password" required>
+  </label>
+  <button type="submit">Sign In</button>
+</form>

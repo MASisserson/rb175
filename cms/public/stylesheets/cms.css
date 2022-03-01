@@ -1,0 +1,26 @@
+body {
+  padding: 1em;
+  font-family: sans-serif;
+}
+
+.message {
+  padding: 10px;
+  background: #FFFF99;
+}
+
+input[type="submit"] {
+  display: block;
+}
+
+#edit {
+  display: block;
+  margin: 5px 0;
+}
+
+#index-delete {
+  display: inline-block;
+}
+
+#username-label, #password-label {
+  display: block;
+}

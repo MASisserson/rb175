@@ -1,5 +1,28 @@
+<form action="/new" method="get">
+  <button type="submit">New Document</button>
+</form>
+
 <ul>
-  <% @files.each do |file_name| %>
-    <li><a href="/<%= file_name %>"><%= file_name %></a></li>
+  <% @files.each do |filename| %>
+    <li>
+      <a href="/<%= filename %>/read_file"><%= filename %></a>
+      <a href="/<%= filename %>/edit_file"%>Edit</a>
+      <form action="/<%= filename %>/delete" method="post" id="index-delete">
+        <button type="submit">delete</button>
+      </form>
+    </li>
   <% end %>
 </ul>
+
+<% if session[:username] %>
+  <form action="/users/signout" method="post">
+    <p>
+      Signed in as <%= session[:username] %>.
+      <button type="submit">Sign Out</button>
+    </p>
+  </form>
+<% else %>
+  <form action="/users/signin" action="get">
+    <button type="submit">Sign In</button>
+  </form>
+<% end %>
