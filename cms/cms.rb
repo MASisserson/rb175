@@ -25,12 +25,21 @@ def data_path
   end
 end
 
+def verify_signin_status
+  return if session[:username]
+
+  session[:message] = 'You must be signed in to do that.'
+  redirect '/'
+end
+
 get '/' do
   @files = Dir.children data_path
   erb :index, layout: :layout
 end
 
 get '/new' do
+  verify_signin_status
+
   erb :new_file, layout: :layout
 end
 
@@ -49,6 +58,8 @@ def verify_name(filename)
 end
 
 post '/create' do
+  verify_signin_status
+
   if params[:title].strip.empty?
     session[:message] = 'A name is required.'
     status 422
@@ -88,6 +99,8 @@ get '/:filename/read_file' do |filename|
 end
 
 get '/:filename/edit_file' do |filename|
+  verify_signin_status
+
   path = File.join(data_path, filename)
   @filename = filename
   @contents = File.read(path)
@@ -96,6 +109,8 @@ get '/:filename/edit_file' do |filename|
 end
 
 post '/:filename/edit_file' do |filename|
+  verify_signin_status
+
   path = File.join(data_path, filename)
   File.open(path, 'w') do |file|
     file.puts params[:edit]
@@ -107,6 +122,8 @@ post '/:filename/edit_file' do |filename|
 end
 
 post '/:filename/delete' do |filename|
+  verify_signin_status
+
   file_path = File.join(data_path, filename)
   File.delete file_path
 

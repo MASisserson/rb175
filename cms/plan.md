@@ -258,3 +258,25 @@ There's a lot here, I feel.
 **Implementation**
 1. Every place that checks for a message printed to the body that came from a `session[:message]` being set: change the implementation to calling `get 'path', {}, {'rack.session' => { message: 'the_message' } }
 2. Go over the sign in tests to see if something can be modded there.
+
+# Restricting Actions to ONly Signed-in Users
+
+**Requirements**
+1. When a signed-out user attempts to perform the following actions, they should be redirected back to the index and shown a message that says "You must be signed in to do that.":
+    a. Visit the edit page for a document
+    b. Submit changes to a document
+    c. Visit the new document page
+    d. Submit the new document form
+    e. Delete a document
+
+**Implementation**
+1. Modify the corresponding routes in cms_test to check for user sign-in status. If present, proceed. If not present, redirect the user to '/' and `session[:message]` should be set to "You must be signed in to do that."
+    a. get '/new'
+    b. post '/create'
+    c. get '/:filename/edit_file'
+    d. post '/:filename/edit_file'
+    e. post '/:filename/delete'
+    f. Make a method that checks for sign in status and performs the redirection necessary if `session[:username]` is nil.
+
+**Testing**
+1. Attempt to do all the above without signing in and verify that a redirection to '/' happened and that 'You must be signed in to do that.' was printed.

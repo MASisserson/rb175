@@ -1,12 +1,14 @@
-source "https://rubygems.org"
+# frozen_string_literal: true
 
-ruby "2.7.0"
+source 'https://rubygems.org'
 
-gem "sinatra"
-gem "sinatra-contrib"
-gem "erubis"
-gem "minitest"
-gem "minitest-reporters"
-gem "rack-test"
-gem "redcarpet"
-gem "pry"
+ruby '2.7.0'
+
+gem 'erubis'
+gem 'minitest'
+gem 'minitest-reporters'
+gem 'pry'
+gem 'rack-test'
+gem 'redcarpet'
+gem 'sinatra'
+gem 'sinatra-contrib'
