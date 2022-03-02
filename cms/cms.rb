@@ -6,6 +6,8 @@ require 'sinatra/content_for'
 require 'tilt/erubis'
 require 'redcarpet'
 require 'pry'
+require 'bcrypt'
+require 'yaml'
 
 configure do
   enable :sessions
@@ -32,23 +34,27 @@ def verify_signin_status
   redirect '/'
 end
 
+# Displays index of files in data folder.
 get '/' do
   @files = Dir.children data_path
   erb :index, layout: :layout
 end
 
+# Page to create a new file.
 get '/new' do
   verify_signin_status
 
   erb :new_file, layout: :layout
 end
 
+# Creates a new document
 def create_document(name, content = '')
   File.open(File.join(data_path, name), 'w') do |file|
     file.write(content)
   end
 end
 
+# Verifies that the filename has a valid extention
 def verify_name(filename)
   if filename =~ /\.[a-zA-Z]+$/
     filename
@@ -57,6 +63,7 @@ def verify_name(filename)
   end
 end
 
+# Creates a new document
 post '/create' do
   verify_signin_status
 
@@ -72,11 +79,13 @@ post '/create' do
   end
 end
 
+# Renders a markdown file as a markup file.
 def render_markdown_file(path)
   markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
   markdown.render(File.read(path))
 end
 
+# Loads a file's contents onto the browser
 def load_file_content(path)
   case File.extname(path)
   when '.txt'
@@ -87,6 +96,7 @@ def load_file_content(path)
   end
 end
 
+# Page for reading the contents of a file
 get '/:filename/read_file' do |filename|
   path = File.join(data_path, filename)
 
@@ -98,6 +108,7 @@ get '/:filename/read_file' do |filename|
   end
 end
 
+# Page to edit the contents of a file
 get '/:filename/edit_file' do |filename|
   verify_signin_status
 
@@ -108,6 +119,7 @@ get '/:filename/edit_file' do |filename|
   erb :edit_file, layout: :layout
 end
 
+# Edits the contents of a file
 post '/:filename/edit_file' do |filename|
   verify_signin_status
 
@@ -121,6 +133,7 @@ post '/:filename/edit_file' do |filename|
   redirect '/'
 end
 
+# Deletes a file
 post '/:filename/delete' do |filename|
   verify_signin_status
 
@@ -131,30 +144,37 @@ post '/:filename/delete' do |filename|
   redirect '/'
 end
 
+# Sign in page
 get '/users/signin' do
   erb :signin, layout: :layout
 end
 
-USERS = {
-  'admin' => 'secret'
-}.freeze
-
-post '/users/signin' do
-  USERS.each do |user, password|
-    next unless (user == params[:username]) &&
-                (password == params[:password])
-
-    session[:username] = params[:username]
-    session[:message] = 'Welcome!'
-    redirect '/'
+def load_user_credentials
+  credentials_path = if ENV['RACK_ENV'] == 'test'
+    File.expand_path('test/users.yml', __dir__)
+  else
+    File.expand_path('users.yml', __dir__)
   end
-
-  status 422
-  session[:message] = 'Invalid credentials'
-  @username = params[:username]
-  erb :signin, layout: :layout
+  YAML.load_file(credentials_path)
 end
 
+# Submits and validates user sign in credentials
+post '/users/signin' do
+  credentials = load_user_credentials
+  username = params[:username]
+
+  if credentials[username] == params[:password]
+    session[:username] = username
+    session[:message] = 'Welcome!'
+    redirect '/'
+  else
+    status 422
+    session[:message] = 'Invalid credentials'
+    erb :signin, layout: :layout
+  end
+end
+
+# Signs out a user
 post '/users/signout' do
   session[:username] = nil
   session[:message] = 'You have been signed out'

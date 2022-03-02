@@ -280,3 +280,15 @@ There's a lot here, I feel.
 
 **Testing**
 1. Attempt to do all the above without signing in and verify that a redirection to '/' happened and that 'You must be signed in to do that.' was printed.
+
+# Storing User Accounts in an External File
+
+**Requirements**
+1. An administrator should be able to modify the list of users who may sign into the application by editing a configuration file using their text editor.
+
+**Implementation**
+1. Create a text file that exists in the root directory called 'users.txt'
+2. In it, create a list of users, starting with admin that looks like this:
+    { username: admin, password: secret }
+    { next.. .. }
+3. In the post '/users/signin' route, read that file and search for a corresponding string using .include? or a regex or something.
