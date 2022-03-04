@@ -292,3 +292,41 @@ There's a lot here, I feel.
     { username: admin, password: secret }
     { next.. .. }
 3. In the post '/users/signin' route, read that file and search for a corresponding string using .include? or a regex or something.
+
+# Storing Hashed Passwords
+
+**Requirements**
+1. User passwords must be hashed using bcrypt before being stored so that raw passwords are not being stored anywhere.
+
+**Implementation**
+0. Create a get route to 'users/new'
+1. Create a route to add users to the site.
+    a. Use bcrypt to hash passwords.
+    b. Create a User class
+    c. Validate the username
+        1. Check the YAML file for the same username
+        2. Verify that the username isn't empty
+    d. Draw up a method to create a user object.
+    e. Draw up a method to create a yaml file for a user.
+    f. Validate password
+2. Create an erb doc called new_user.erb
+    a. Username text input
+    b. password password input
+    c. password confirmation password input
+    d. submit button
+3. Add a user to the site manually.
+4. Check users.yml for the new username and password.
+5. Modify '/users/signin' post route to authenticate passwords with bcrypt
+6. Add a "Create Account" button to '/' when no user is signed in.
+7. Add a prep step to cms_test.rb that creates a users folder in test
+8. Modify post '/users/signin' route to reflect changes to user storage.
+9. Fix issue with password generation. Should just be the str portion that is saved to the yaml file.
+10. Change post '/users/signin' to work with the new structure.
+    a. Access the users directory
+    b. Obtain an array of the user objects.
+    c. Compare parameter username and password to the objects in the array.
+        Make sure to compare using BCrypt
+    d. If an object is found with the same username and password, sign the user in.
+        1. Set `session[:curr_usr]` to the username
+        2. Set `session[:message]` to 'Welcome!
+    e. Else status 422 and etc.

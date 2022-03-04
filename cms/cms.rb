@@ -9,6 +9,8 @@ require 'pry'
 require 'bcrypt'
 require 'yaml'
 
+require_relative 'user_obj'
+
 configure do
   enable :sessions
   set :sessions_secret, 'secret'
@@ -19,16 +21,24 @@ before do
   @title = 'Content Manager'
 end
 
-def data_path
+def find_path_to(dir)
   if ENV['RACK_ENV'] == 'test'
-    File.expand_path('test/data', __dir__)
+    File.expand_path("test/#{dir}", __dir__)
   else
-    File.expand_path('data', __dir__)
+    File.expand_path(dir, __dir__)
   end
 end
 
+# def data_path
+#   if ENV['RACK_ENV'] == 'test'
+#     File.expand_path('test/data', __dir__)
+#   else
+#     File.expand_path('data', __dir__)
+#   end
+# end
+
 def verify_signin_status
-  return if session[:username]
+  return if session[:curr_usr]
 
   session[:message] = 'You must be signed in to do that.'
   redirect '/'
@@ -36,7 +46,7 @@ end
 
 # Displays index of files in data folder.
 get '/' do
-  @files = Dir.children data_path
+  @files = Dir.children find_path_to('data')
   erb :index, layout: :layout
 end
 
@@ -49,7 +59,7 @@ end
 
 # Creates a new document
 def create_document(name, content = '')
-  File.open(File.join(data_path, name), 'w') do |file|
+  File.open(File.join(find_path_to('data'), name), 'w') do |file|
     file.write(content)
   end
 end
@@ -98,7 +108,7 @@ end
 
 # Page for reading the contents of a file
 get '/:filename/read_file' do |filename|
-  path = File.join(data_path, filename)
+  path = File.join(find_path_to('data'), filename)
 
   if File.file? path
     load_file_content path
@@ -112,7 +122,7 @@ end
 get '/:filename/edit_file' do |filename|
   verify_signin_status
 
-  path = File.join(data_path, filename)
+  path = File.join(find_path_to('data'), filename)
   @filename = filename
   @contents = File.read(path)
 
@@ -123,7 +133,7 @@ end
 post '/:filename/edit_file' do |filename|
   verify_signin_status
 
-  path = File.join(data_path, filename)
+  path = File.join(find_path_to('data'), filename)
   File.open(path, 'w') do |file|
     file.puts params[:edit]
     file.close
@@ -137,7 +147,7 @@ end
 post '/:filename/delete' do |filename|
   verify_signin_status
 
-  file_path = File.join(data_path, filename)
+  file_path = File.join(find_path_to('data'), filename)
   File.delete file_path
 
   session[:message] = "#{filename} has been deleted"
@@ -149,23 +159,52 @@ get '/users/signin' do
   erb :signin, layout: :layout
 end
 
-def load_user_credentials
-  credentials_path = if ENV['RACK_ENV'] == 'test'
-    File.expand_path('test/users.yml', __dir__)
-  else
-    File.expand_path('users.yml', __dir__)
+# Returns an array of user YAML files
+def all_users
+  users_dir = find_path_to 'users'
+
+  files = Dir.children(users_dir).select do |filename|
+    filename.end_with? '.yml'
   end
-  YAML.load_file(credentials_path)
+
+  files.map do |filename|
+    path = File.join(users_dir, filename)
+    YAML.load_file(path)
+  end
+end
+
+# Looks for a user yml file based on given username
+def find_user(username)
+  all_users.each do |obj|
+    return obj if obj.username == username
+  end
+
+  false
+end
+
+# Validate login credentials
+def valid_credentials?(saved_usr, username, saved_pwd, password)
+  if saved_usr.username == username
+    bcrypt_password = BCrypt::Password.new(saved_pwd)
+    bcrypt_password == password
+  else
+    false
+  end
 end
 
 # Submits and validates user sign in credentials
 post '/users/signin' do
-  credentials = load_user_credentials
   username = params[:username]
+  password = params[:password]
+  @user = find_user(username)
+  @users = all_users
 
-  if credentials[username] == params[:password]
-    session[:username] = username
+  if @user != false && valid_credentials?(@user,
+                                          username,
+                                          @user.password, password)
+
     session[:message] = 'Welcome!'
+    session[:curr_usr] = username
     redirect '/'
   else
     status 422
@@ -176,7 +215,59 @@ end
 
 # Signs out a user
 post '/users/signout' do
-  session[:username] = nil
+  session[:curr_usr] = nil
   session[:message] = 'You have been signed out'
   redirect '/'
+end
+
+# Page for user account credential creation.
+get '/users/new' do
+  erb :new_user, layout: :layout
+end
+
+# Checks that the submitted username is valid.
+def valid_username?(username)
+  users = all_users
+
+  users.each { |obj| return false if obj.username == username }
+  true
+end
+
+# Checks that the submitted password is valid
+def valid_password?(password, password_confirm)
+  password == password_confirm
+end
+
+# Creates a new user object with the given username and password
+def create_user(username, password)
+  User.new(username, BCrypt::Password.create(password).split('').join(''))
+end
+
+# Creates a user.yml file based on the given User instance.
+def create_user_yml(obj)
+  path = find_path_to 'users'
+  file_name = "#{obj.username}.yml"
+  file_path = File.join path, file_name
+  File.open(file_path, 'w') { |file| file.write(obj.to_yaml) }
+end
+
+# Creates a user account, and automatically logs it in.
+post '/users/new' do
+  username = params[:username]
+  password = params[:password]
+  pwd_confirm = params[:confirm]
+
+  if !valid_username?(username)
+    session[:message] = 'Username already in use.'
+    erb :new_user, layout: :layout
+  elsif !valid_password?(password, pwd_confirm)
+    session[:message] = 'Passwords do not match.'
+    erb :new_user, layout: :layout
+  else
+    new_user = create_user(username, password)
+    create_user_yml(new_user)
+
+    session[:curr_usr] = username
+    redirect '/'
+  end
 end

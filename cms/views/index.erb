@@ -14,10 +14,10 @@
   <% end %>
 </ul>
 
-<% if session[:username] %>
+<% if session[:curr_usr] %>
   <form action="/users/signout" method="post">
     <p>
-      Signed in as <%= session[:username] %>.
+      Signed in as <%= session[:curr_usr] %>.
       <button type="submit">Sign Out</button>
     </p>
   </form>
